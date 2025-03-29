@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -25,8 +26,17 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					DEFAULT: '#2ED1A2',
+					foreground: '#FFFFFF',
+					dark: '#1DA17A',
+					light: '#6EEBC6'
+				},
+				taskace: {
+					dark: '#191A1E',
+					gray: '#494C57',
+					green: '#2ED1A2',
+					card: '#9eed9e26',
+					circle: '#5C5E70'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -84,11 +94,16 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'progress': {
+					'0%': { width: '0%' },
+					'100%': { width: 'var(--progress-value)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'progress': 'progress 1s ease-in-out forwards'
 			}
 		}
 	},

@@ -26,24 +26,23 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#C154C1', // Vibrant Purple
-					foreground: '#FFFFFF',
-					dark: '#9D3F9D', // Darker shade for hover
-					light: '#D77FD7' // Lighter shade
+					DEFAULT: '#41E0B5', // Mint green
+					foreground: '#2A343F', // Dark text on light buttons
+					dark: '#32B391', // Darker mint for hover
+					light: '#7CEECE' // Lighter mint
 				},
 				taskace: {
-					dark: '#F7F8FA', // Light Gray background
-					gray: '#E5E7EB', // Lighter gray
-					purple: '#C154C1', // Vibrant Purple
-					coral: '#FB836F', // Coral
-					yellow: '#FFC83E', // Golden Yellow
-					violet: '#7E54BF', // Violet
-					card: 'rgba(193, 84, 193, 0.1)', // Purple with transparency
-					circle: '#D1D5DB' // Light circle color
+					dark: '#1F2A39', // Dark blue background
+					gray: '#365A7E', // Medium blue
+					mint: '#41E0B5', // Mint green
+					blue: '#C9E6FA', // Light blue
+					darkBlue: '#18202C', // Darker blue
+					card: 'rgba(65, 224, 181, 0.1)', // Mint with transparency
+					circle: '#365A7E' // Medium blue for circles
 				},
 				secondary: {
-					DEFAULT: '#FB836F', // Coral
-					foreground: '#FFFFFF'
+					DEFAULT: '#C9E6FA', // Light blue
+					foreground: '#2A343F' // Dark text
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -54,8 +53,8 @@ export default {
 					foreground: 'hsl(var(--muted-foreground))'
 				},
 				accent: {
-					DEFAULT: '#FFC83E', // Golden Yellow
-					foreground: '#FFFFFF'
+					DEFAULT: '#32B391', // Darker mint
+					foreground: '#FFFFFF' // White text
 				},
 				popover: {
 					DEFAULT: 'hsl(var(--popover))',

@@ -26,16 +26,16 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#2ED1A2',
+					DEFAULT: '#4A86E8',
 					foreground: '#FFFFFF',
-					dark: '#1DA17A',
-					light: '#6EEBC6'
+					dark: '#3A76D8',
+					light: '#7AA5F0'
 				},
 				taskace: {
-					dark: '#191A1E',
+					dark: '#1E2235',
 					gray: '#494C57',
-					green: '#2ED1A2',
-					card: '#9eed9e26',
+					blue: '#4A86E8',
+					card: '#9eb9ed26',
 					circle: '#5C5E70'
 				},
 				secondary: {

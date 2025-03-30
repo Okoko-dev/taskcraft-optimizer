@@ -6,13 +6,23 @@ import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, loading } = useAuth();
+  const { login, resetPassword, loading } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordDialogOpen, setForgotPasswordDialogOpen] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +37,24 @@ const Login = () => {
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!forgotPasswordEmail) {
+      toast.error("Please enter your email");
+      return;
+    }
+    
+    try {
+      await resetPassword(forgotPasswordEmail);
+      setResetSent(true);
+      toast.success("Password reset link sent to your email");
+    } catch (error) {
+      console.error('Reset password error:', error);
+      toast.error("Failed to send reset link. Please try again.");
     }
   };
 
@@ -73,7 +101,7 @@ const Login = () => {
                 variant="link"
                 className="p-0 text-primary"
                 type="button"
-                onClick={() => navigate('/forgot-password')}
+                onClick={() => setForgotPasswordDialogOpen(true)}
               >
                 Forgot Password?
               </Button>
@@ -100,6 +128,68 @@ const Login = () => {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={forgotPasswordDialogOpen} onOpenChange={setForgotPasswordDialogOpen}>
+        <DialogContent className="bg-taskace-dark text-white border-gray-800">
+          <DialogHeader>
+            <DialogTitle>{resetSent ? 'Reset Link Sent' : 'Forgot Password'}</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              {resetSent 
+                ? 'Check your email for the password reset link.'
+                : 'Enter your email to receive a password reset link.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {!resetSent ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4 mt-4">
+              <div className="bg-taskace-gray p-4 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 flex items-center justify-center">
+                    <img src="/lovable-uploads/6036f38f-be67-4a02-90ac-c4df3c0f61ea.png" alt="Email" className="w-6 h-6" />
+                  </div>
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={forgotPasswordEmail}
+                    onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                    className="bg-transparent border-none text-white placeholder:text-gray-500 focus-visible:ring-0"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setForgotPasswordDialogOpen(false)}
+                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-primary hover:bg-primary-dark text-white"
+                >
+                  Send Reset Link
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <div className="mt-4">
+              <Button
+                className="w-full bg-primary hover:bg-primary-dark text-white"
+                onClick={() => {
+                  setForgotPasswordDialogOpen(false);
+                  setResetSent(false);
+                }}
+              >
+                Back to Login
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

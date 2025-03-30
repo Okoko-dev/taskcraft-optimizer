@@ -59,7 +59,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-taskace-dark">
+    <div className="min-h-screen flex flex-col bg-[#F7F8FA]">
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         <div className="absolute top-0 left-0 w-32 h-32 circle-bg opacity-20 -translate-y-1/2"></div>
         <div className="absolute bottom-0 right-0 w-64 h-64 circle-bg opacity-10 translate-y-1/3"></div>
@@ -68,7 +68,7 @@ const Login = () => {
         
         <div className="w-full max-w-md space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-taskace-gray p-6 rounded-lg space-y-4">
+            <div className="bg-white p-6 rounded-lg shadow-sm space-y-4 border border-[#E5E7EB]">
               <div className="flex items-center space-x-3">
                 <div className="w-6 h-6 flex items-center justify-center">
                   <img src="/lovable-uploads/6036f38f-be67-4a02-90ac-c4df3c0f61ea.png" alt="Email" className="w-6 h-6" />
@@ -78,7 +78,7 @@ const Login = () => {
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-transparent border-none text-white placeholder:text-gray-500 focus-visible:ring-0"
+                  className="bg-transparent border-none text-[#333333] placeholder:text-gray-500 focus-visible:ring-0"
                 />
               </div>
               
@@ -91,7 +91,7 @@ const Login = () => {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-transparent border-none text-white placeholder:text-gray-500 focus-visible:ring-0"
+                  className="bg-transparent border-none text-[#333333] placeholder:text-gray-500 focus-visible:ring-0"
                 />
               </div>
             </div>
@@ -117,7 +117,7 @@ const Login = () => {
           </form>
           
           <div className="text-center">
-            <p className="text-gray-400">
+            <p className="text-[#333333]">
               Not a member? <Button variant="link" className="p-0 text-primary" onClick={() => navigate('/signup')}>Sign up now</Button>
             </p>
           </div>
@@ -131,10 +131,10 @@ const Login = () => {
 
       {/* Forgot Password Dialog */}
       <Dialog open={forgotPasswordDialogOpen} onOpenChange={setForgotPasswordDialogOpen}>
-        <DialogContent className="bg-taskace-dark text-white border-gray-800">
+        <DialogContent className="bg-white text-[#333333] border border-[#E5E7EB] shadow-md">
           <DialogHeader>
             <DialogTitle>{resetSent ? 'Reset Link Sent' : 'Forgot Password'}</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-gray-500">
               {resetSent 
                 ? 'Check your email for the password reset link.'
                 : 'Enter your email to receive a password reset link.'}
@@ -143,7 +143,7 @@ const Login = () => {
           
           {!resetSent ? (
             <form onSubmit={handleForgotPassword} className="space-y-4 mt-4">
-              <div className="bg-taskace-gray p-4 rounded-lg">
+              <div className="bg-[#F7F8FA] p-4 rounded-lg border border-[#E5E7EB]">
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 flex items-center justify-center">
                     <img src="/lovable-uploads/6036f38f-be67-4a02-90ac-c4df3c0f61ea.png" alt="Email" className="w-6 h-6" />
@@ -153,7 +153,7 @@ const Login = () => {
                     placeholder="Email"
                     value={forgotPasswordEmail}
                     onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                    className="bg-transparent border-none text-white placeholder:text-gray-500 focus-visible:ring-0"
+                    className="bg-transparent border-none text-[#333333] placeholder:text-gray-500 focus-visible:ring-0"
                   />
                 </div>
               </div>
@@ -163,7 +163,7 @@ const Login = () => {
                   type="button"
                   variant="outline"
                   onClick={() => setForgotPasswordDialogOpen(false)}
-                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                  className="border-[#E5E7EB] text-[#333333] hover:bg-[#F7F8FA]"
                 >
                   Cancel
                 </Button>

@@ -26,22 +26,23 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#4A90E2', // Calm Blue
+					DEFAULT: '#C154C1', // Vibrant Purple
 					foreground: '#FFFFFF',
-					dark: '#3A80D2', // Darker shade for hover
-					light: '#7AAFE0' // Lighter shade
+					dark: '#9D3F9D', // Darker shade for hover
+					light: '#D77FD7' // Lighter shade
 				},
 				taskace: {
 					dark: '#F7F8FA', // Light Gray background
 					gray: '#E5E7EB', // Lighter gray
-					blue: '#4A90E2', // Calm Blue
-					teal: '#50E3C2', // Soft Teal
-					orange: '#F5A623', // Warm Orange
-					card: 'rgba(74, 144, 226, 0.1)', // Blue with transparency
+					purple: '#C154C1', // Vibrant Purple
+					coral: '#FB836F', // Coral
+					yellow: '#FFC83E', // Golden Yellow
+					violet: '#7E54BF', // Violet
+					card: 'rgba(193, 84, 193, 0.1)', // Purple with transparency
 					circle: '#D1D5DB' // Light circle color
 				},
 				secondary: {
-					DEFAULT: '#50E3C2', // Soft Teal
+					DEFAULT: '#FB836F', // Coral
 					foreground: '#FFFFFF'
 				},
 				destructive: {
@@ -53,7 +54,7 @@ export default {
 					foreground: 'hsl(var(--muted-foreground))'
 				},
 				accent: {
-					DEFAULT: '#F5A623', // Warm Orange
+					DEFAULT: '#FFC83E', // Golden Yellow
 					foreground: '#FFFFFF'
 				},
 				popover: {

@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import Tasks from "./pages/Tasks";
 import Schedules from "./pages/Schedules";
 import CreateTask from "./pages/CreateTask";
+import CalendarViewPage from "./pages/CalendarView";
 import NotFound from "./pages/NotFound";
 
 // Protected route component
@@ -52,6 +53,7 @@ const AppRoutes = () => {
       <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
       <Route path="/schedules" element={<ProtectedRoute><Schedules /></ProtectedRoute>} />
       <Route path="/create-task" element={<ProtectedRoute><CreateTask /></ProtectedRoute>} />
+      <Route path="/calendar" element={<ProtectedRoute><CalendarViewPage /></ProtectedRoute>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

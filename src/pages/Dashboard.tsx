@@ -1,20 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTaskManager } from '@/context/TaskContext';
 import Header from '@/components/Header';
 import NavBar from '@/components/NavBar';
-import TaskCard from '@/components/TaskCard';
 import ProgressBar from '@/components/ProgressBar';
 import { Button } from '@/components/ui/button';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { CheckCircle, Clock, ArrowRight } from 'lucide-react';
+import { CheckCircle, Clock, ArrowRight, Calendar, BrainCog, AlertCircle } from 'lucide-react';
+import { format } from 'date-fns';
+import SidePanelTrigger from '@/components/SidePanelTrigger';
+import { Badge } from '@/components/ui/badge';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { tasks, scheduledTasks, points, completeTask } = useTaskManager();
+  const { tasks, scheduledTasks, points, completeTask, userPreferences, rescheduleAllTasks } = useTaskManager();
+  
+  // State to toggle view between today and week
+  const [viewMode, setViewMode] = useState<'today' | 'week'>('today');
   
   // Calculate task completion stats
   const totalTasks = tasks.length;
@@ -35,9 +40,31 @@ const Dashboard = () => {
     year: 'numeric',
   }).format(today);
 
+  // Filter tasks for today
+  const todaysTasks = scheduledTasks.filter(item => {
+    const itemDate = new Date(item.date);
+    return itemDate.toDateString() === today.toDateString();
+  });
+
+  // Group tasks by date for weekly view
+  const groupedByDate = scheduledTasks.reduce((acc, task) => {
+    const dateString = new Date(task.date).toDateString();
+    if (!acc[dateString]) {
+      acc[dateString] = [];
+    }
+    acc[dateString].push(task);
+    return acc;
+  }, {} as Record<string, typeof scheduledTasks>);
+
+  // Sort dates for the weekly view
+  const sortedDates = Object.keys(groupedByDate).sort((a, b) => 
+    new Date(a).getTime() - new Date(b).getTime()
+  );
+
   return (
     <div className="min-h-screen bg-taskace-dark text-white pb-24">
       <Header />
+      <SidePanelTrigger />
       
       <main className="p-4 max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-6">
@@ -151,51 +178,183 @@ const Dashboard = () => {
         
         <div>
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold">AI Scheduled Tasks</h2>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="text-primary text-sm flex items-center"
-              onClick={() => navigate('/tasks')}
-            >
-              View all <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
+            <div className="flex items-center">
+              <h2 className="text-lg font-semibold">AI Scheduled Tasks</h2>
+              <Badge className="ml-2 bg-primary/20 text-primary hover:bg-primary/30 cursor-pointer" onClick={() => rescheduleAllTasks()}>
+                <BrainCog className="w-3 h-3 mr-1" /> AI
+              </Badge>
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                variant={viewMode === 'today' ? "default" : "outline"}
+                size="sm"
+                className="text-xs"
+                onClick={() => setViewMode('today')}
+              >
+                Today
+              </Button>
+              <Button 
+                variant={viewMode === 'week' ? "default" : "outline"}
+                size="sm"
+                className="text-xs"
+                onClick={() => setViewMode('week')}
+              >
+                Week
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-primary text-sm flex items-center"
+                onClick={() => navigate('/tasks')}
+              >
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
           
-          <div className="space-y-3">
-            {scheduledTasks.length > 0 ? (
-              scheduledTasks.slice(0, 3).map(({ task, timeSlot }) => (
-                <div key={task.id} className="task-card">
-                  <div className="text-xs text-gray-400 mb-1">{timeSlot}</div>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold">{task.title}</h3>
-                      <p className="text-sm text-gray-300 line-clamp-1">{task.description}</p>
+          {viewMode === 'today' ? (
+            <div className="space-y-3">
+              {todaysTasks.length > 0 ? (
+                todaysTasks.map((scheduledTask, index) => (
+                  <div key={`${scheduledTask.task.id}-${index}`} className="bg-[#283445] p-4 rounded-lg border border-[#3D4A5C]">
+                    <div className="text-xs font-medium text-primary mb-1 flex items-center">
+                      <Clock className="w-3 h-3 mr-1" /> {scheduledTask.timeSlot}
                     </div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold">{scheduledTask.task.title}</h3>
+                        <p className="text-sm text-gray-300 line-clamp-1">{scheduledTask.task.description}</p>
+                        <div className="flex items-center mt-2 space-x-2">
+                          <Badge variant="outline" className="text-[#C9E6FA] border-[#C9E6FA] text-xs">
+                            {scheduledTask.task.category}
+                          </Badge>
+                          <Badge variant="outline" className={`text-xs
+                            ${scheduledTask.task.priority === 'High' ? 'text-[#FB836F] border-[#FB836F]' : 
+                             scheduledTask.task.priority === 'Medium' ? 'text-[#FFC107] border-[#FFC107]' : 
+                            'text-[#41E0B5] border-[#41E0B5]'}`}
+                          >
+                            {scheduledTask.task.priority}
+                          </Badge>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="bg-primary/20 hover:bg-primary/30 text-primary-foreground rounded-full w-8 h-8 p-0"
+                        onClick={() => completeTask(scheduledTask.task.id)}
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-400 bg-[#283445] p-4 rounded-lg border border-[#3D4A5C]">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                  <p>No tasks scheduled for today</p>
+                  <p className="text-xs mt-1 text-gray-500">Add tasks or adjust your AI preferences</p>
+                  <div className="flex justify-center mt-4 space-x-3">
                     <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="bg-primary/20 hover:bg-primary/30 text-primary-foreground rounded-full w-8 h-8 p-0"
-                      onClick={() => completeTask(task.id)}
+                      variant="outline" 
+                      size="sm"
+                      className="text-primary border-primary hover:bg-primary/10"
+                      onClick={() => navigate('/create-task')}
                     >
-                      <CheckCircle className="w-4 h-4" />
+                      Add Task
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      size="sm" 
+                      className="text-primary border-primary hover:bg-primary/10"
+                      onClick={rescheduleAllTasks}
+                    >
+                      <BrainCog className="w-3 h-3 mr-1" /> Recalculate
                     </Button>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-6 text-gray-400">
-                <p>No tasks scheduled for today</p>
-                <Button 
-                  variant="link" 
-                  className="text-primary"
-                  onClick={() => navigate('/create-task')}
-                >
-                  Add a new task
-                </Button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {sortedDates.length > 0 ? (
+                sortedDates.map(dateString => {
+                  const date = new Date(dateString);
+                  const isToday = date.toDateString() === today.toDateString();
+                  const dateFormatted = isToday 
+                    ? 'Today' 
+                    : format(date, 'EEEE, MMMM d');
+                  
+                  return (
+                    <div key={dateString} className="space-y-3">
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-2 text-primary" />
+                        <h3 className="font-medium">{dateFormatted}</h3>
+                      </div>
+                      
+                      {groupedByDate[dateString].map((scheduledTask, index) => (
+                        <div key={`${scheduledTask.task.id}-${index}`} className="bg-[#283445] p-3 pl-4 rounded-lg border border-[#3D4A5C] ml-6">
+                          <div className="text-xs font-medium text-primary mb-1 flex items-center">
+                            <Clock className="w-3 h-3 mr-1" /> {scheduledTask.timeSlot}
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold">{scheduledTask.task.title}</h3>
+                              <div className="flex items-center mt-1 space-x-2">
+                                <Badge variant="outline" className="text-[#C9E6FA] border-[#C9E6FA] text-xs">
+                                  {scheduledTask.task.category}
+                                </Badge>
+                                <Badge variant="outline" className={`text-xs
+                                  ${scheduledTask.task.priority === 'High' ? 'text-[#FB836F] border-[#FB836F]' : 
+                                   scheduledTask.task.priority === 'Medium' ? 'text-[#FFC107] border-[#FFC107]' : 
+                                  'text-[#41E0B5] border-[#41E0B5]'}`}
+                                >
+                                  {scheduledTask.task.priority}
+                                </Badge>
+                              </div>
+                            </div>
+                            {isToday && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="bg-primary/20 hover:bg-primary/30 text-primary-foreground rounded-full w-6 h-6 p-0"
+                                onClick={() => completeTask(scheduledTask.task.id)}
+                              >
+                                <CheckCircle className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-gray-400 bg-[#283445] p-4 rounded-lg border border-[#3D4A5C]">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                  <p>No tasks scheduled for the upcoming week</p>
+                  <p className="text-xs mt-1 text-gray-500">Add tasks or adjust your AI preferences</p>
+                  <div className="flex justify-center mt-4 space-x-3">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-primary border-primary hover:bg-primary/10"
+                      onClick={() => navigate('/create-task')}
+                    >
+                      Add Task
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      size="sm" 
+                      className="text-primary border-primary hover:bg-primary/10"
+                      onClick={rescheduleAllTasks}
+                    >
+                      <BrainCog className="w-3 h-3 mr-1" /> Recalculate
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
       

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { TaskProvider } from "./context/TaskContext";
 import { useAuth } from "./context/AuthContext";
+import Sidebar from "./components/Sidebar";
 
 // Pages
 import Index from "./pages/Index";
@@ -42,21 +43,24 @@ const AppRoutes = () => {
   const { user } = useAuth();
   
   return (
-    <Routes>
-      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Index />} />
-      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
-      <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
-      <Route path="/forgot-password" element={user ? <Navigate to="/dashboard" replace /> : <ForgotPassword />} />
-      
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
-      <Route path="/schedules" element={<ProtectedRoute><Schedules /></ProtectedRoute>} />
-      <Route path="/create-task" element={<ProtectedRoute><CreateTask /></ProtectedRoute>} />
-      <Route path="/calendar" element={<ProtectedRoute><CalendarViewPage /></ProtectedRoute>} />
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      {user && <Sidebar />}
+      <Routes>
+        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Index />} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
+        <Route path="/forgot-password" element={user ? <Navigate to="/dashboard" replace /> : <ForgotPassword />} />
+        
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+        <Route path="/schedules" element={<ProtectedRoute><Schedules /></ProtectedRoute>} />
+        <Route path="/create-task" element={<ProtectedRoute><CreateTask /></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute><CalendarViewPage /></ProtectedRoute>} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 };
 

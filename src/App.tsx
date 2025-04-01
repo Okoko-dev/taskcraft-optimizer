@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { TaskProvider } from "./context/TaskContext";
 import { useAuth } from "./context/AuthContext";
+import SidePanelTrigger from "./components/SidePanelTrigger";
 
 // Pages
 import Index from "./pages/Index";
@@ -33,7 +34,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
   
-  return <>{children}</>;
+  return (
+    <>
+      <SidePanelTrigger />
+      {children}
+    </>
+  );
 };
 
 const queryClient = new QueryClient();

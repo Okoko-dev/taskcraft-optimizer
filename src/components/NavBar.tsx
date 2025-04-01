@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, CheckSquare, Calendar, User, Plus, CalendarDays } from 'lucide-react';
+import { Home, CheckSquare, Calendar, User, Plus } from 'lucide-react';
 
 const NavBar: React.FC = () => {
   const navigate = useNavigate();
@@ -43,14 +43,6 @@ const NavBar: React.FC = () => {
         >
           <Calendar size={24} />
           <span className="text-xs mt-1">Schedules</span>
-        </button>
-        
-        <button 
-          onClick={() => navigate('/calendar')} 
-          className={`flex flex-col items-center p-2 ${isActive('/calendar') ? 'text-[#41E0B5]' : 'text-gray-400'}`}
-        >
-          <CalendarDays size={24} />
-          <span className="text-xs mt-1">Calendar</span>
         </button>
         
         <button 

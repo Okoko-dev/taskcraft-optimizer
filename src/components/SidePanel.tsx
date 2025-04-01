@@ -25,7 +25,7 @@ interface SidePanelProps {
 
 const SidePanel: React.FC<SidePanelProps> = ({ open, onOpenChange }) => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const { userPreferences, updateUserPreferences, rescheduleAllTasks } = useTaskManager();
   const [activeTab, setActiveTab] = useState('navigation');
 
@@ -35,7 +35,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ open, onOpenChange }) => {
   };
 
   const handleSignOut = () => {
-    signOut();
+    logout();
     navigate('/login');
     onOpenChange(false);
   };

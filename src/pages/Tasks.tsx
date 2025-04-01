@@ -8,12 +8,26 @@ import { Button } from '@/components/ui/button';
 import { Search, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Tasks = () => {
   const navigate = useNavigate();
   const { tasks } = useTaskManager();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<'All' | TaskCategory>('All');
+  
+  const categories: ('All' | TaskCategory)[] = [
+    'All', 
+    'Education', 
+    'Personal', 
+    'Household', 
+    'Academic Tasks', 
+    'Personal Development', 
+    'Daily Responsibilities', 
+    'Life Management', 
+    'Rewards', 
+    'Breaks'
+  ];
   
   // Filter tasks based on search term and active category
   const filteredTasks = tasks.filter(task => {
@@ -60,36 +74,24 @@ const Tasks = () => {
           />
         </div>
         
-        <div className="flex space-x-2 mb-6 overflow-x-auto pb-2">
-          <Button
-            variant={activeCategory === 'All' ? 'default' : 'outline'}
-            className={activeCategory === 'All' ? 'bg-primary text-white hover:bg-primary-dark' : 'bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800'}
-            onClick={() => setActiveCategory('All')}
-          >
-            All
-          </Button>
-          <Button
-            variant={activeCategory === 'Education' ? 'default' : 'outline'}
-            className={activeCategory === 'Education' ? 'bg-primary text-white hover:bg-primary-dark' : 'bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800'}
-            onClick={() => setActiveCategory('Education')}
-          >
-            Education
-          </Button>
-          <Button
-            variant={activeCategory === 'Personal' ? 'default' : 'outline'}
-            className={activeCategory === 'Personal' ? 'bg-primary text-white hover:bg-primary-dark' : 'bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800'}
-            onClick={() => setActiveCategory('Personal')}
-          >
-            Personal
-          </Button>
-          <Button
-            variant={activeCategory === 'Household' ? 'default' : 'outline'}
-            className={activeCategory === 'Household' ? 'bg-primary text-white hover:bg-primary-dark' : 'bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800'}
-            onClick={() => setActiveCategory('Household')}
-          >
-            Household
-          </Button>
-        </div>
+        <ScrollArea className="mb-6 pb-2 h-16">
+          <div className="flex space-x-2 w-max">
+            {categories.map((cat) => (
+              <Button
+                key={cat}
+                variant={activeCategory === cat ? 'default' : 'outline'}
+                className={
+                  activeCategory === cat 
+                    ? 'bg-primary text-white hover:bg-primary-dark' 
+                    : 'bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800'
+                }
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat}
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
         
         <div className="space-y-4">
           {filteredTasks.length > 0 ? (

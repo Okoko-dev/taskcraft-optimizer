@@ -1,9 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { useAuth } from './AuthContext';
 
-export type TaskCategory = 'Education' | 'Personal' | 'Household';
+export type TaskCategory = 'Education' | 'Personal' | 'Household' | 'Academic Tasks' | 'Personal Development' | 'Daily Responsibilities' | 'Life Management' | 'Rewards' | 'Breaks';
 export type TaskPriority = 'High' | 'Medium' | 'Low';
 
 export type Task = {
@@ -57,6 +56,7 @@ type TaskContextType = {
   userPreferences: UserPreferences;
   addTask: (task: Omit<Task, 'id' | 'completed' | 'createdAt' | 'completedAt'>) => void;
   completeTask: (id: string) => void;
+  uncompleteTask: (id: string) => void;
   deleteTask: (id: string) => void;
   updateTask: (id: string, taskData: Partial<Omit<Task, 'id' | 'createdAt'>>) => void;
   addSchedule: (schedule: Omit<ScheduleTemplate, 'id'>) => void;
@@ -82,6 +82,7 @@ const TaskContext = createContext<TaskContextType>({
   },
   addTask: () => {},
   completeTask: () => {},
+  uncompleteTask: () => {},
   deleteTask: () => {},
   updateTask: () => {},
   addSchedule: () => {},
@@ -95,7 +96,6 @@ const TaskContext = createContext<TaskContextType>({
 
 export const useTaskManager = () => useContext(TaskContext);
 
-// Sample initial data
 const initialTasks: Task[] = [
   {
     id: '1',
@@ -192,7 +192,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     studySessionDuration: 45,
   });
 
-  // Load tasks from localStorage on initial load
   useEffect(() => {
     if (user) {
       const storedTasks = localStorage.getItem('taskace_tasks');
@@ -202,7 +201,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (storedTasks) {
         const parsedTasks = JSON.parse(storedTasks);
-        // Convert string dates back to Date objects
         const tasksWithDates = parsedTasks.map((task: any) => ({
           ...task,
           deadline: new Date(task.deadline),
@@ -212,7 +210,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }));
         setTasks(tasksWithDates);
       } else {
-        // Use initial data if no stored tasks
         setTasks(initialTasks);
       }
       
@@ -229,12 +226,10 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserPreferences(JSON.parse(storedPreferences));
       }
       
-      // Schedule tasks based on availability
       scheduleTasksBasedOnAI();
     }
   }, [user]);
 
-  // Save tasks to localStorage whenever they change
   useEffect(() => {
     if (user && tasks.length > 0) {
       localStorage.setItem('taskace_tasks', JSON.stringify(tasks));
@@ -242,7 +237,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [tasks, user]);
   
-  // Save schedules to localStorage whenever they change
   useEffect(() => {
     if (user && schedules.length > 0) {
       localStorage.setItem('taskace_schedules', JSON.stringify(schedules));
@@ -250,14 +244,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [schedules, user]);
   
-  // Save points to localStorage whenever they change
   useEffect(() => {
     if (user) {
       localStorage.setItem('taskace_points', JSON.stringify(points));
     }
   }, [points, user]);
 
-  // Save user preferences to localStorage whenever they change
   useEffect(() => {
     if (user) {
       localStorage.setItem('taskace_preferences', JSON.stringify(userPreferences));
@@ -265,40 +257,30 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [userPreferences, user]);
 
-  // AI algorithm to schedule tasks based on availability
   const scheduleTasksBasedOnAI = () => {
     if (!currentSchedule) return;
     
-    // Filter incomplete tasks
     const incompleteTasks = tasks.filter(task => !task.completed);
     
-    // Sort tasks by a weighted score based on multiple factors
     const sortedTasks = [...incompleteTasks].sort((a, b) => {
-      // Calculate score based on priority
       const priorityScore = (priority: TaskPriority) => {
         const priorityValues = { High: 10, Medium: 5, Low: 1 };
         return priorityValues[priority];
       };
       
-      // Calculate score based on deadline proximity
       const deadlineScore = (deadline: Date) => {
         const daysUntilDeadline = Math.max(0, Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-        // Higher score for closer deadlines (max 10 points)
         return Math.min(10, Math.max(0, 10 - daysUntilDeadline));
       };
       
-      // Calculate score based on category (education tasks might be prioritized)
       const categoryScore = (category: TaskCategory) => {
         return category === 'Education' ? 3 : (category === 'Personal' ? 2 : 1);
       };
       
-      // Optional: Consider estimated duration (if available)
       const durationScore = (task: Task) => {
-        // Tasks with known duration get a small bonus
         return task.estimatedDuration ? 1 : 0;
       };
       
-      // Calculate total weighted score
       const scoreA = (priorityScore(a.priority) * 3) + 
                     (deadlineScore(a.deadline) * 2) + 
                     categoryScore(a.category) +
@@ -309,41 +291,33 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     categoryScore(b.category) +
                     durationScore(b);
       
-      // Sort by higher score first
       return scoreB - scoreA;
     });
     
-    // Find available time slots from the schedule
     const availableSlots = currentSchedule.scheduleItems.filter(
       item => item.activity.includes('Free Time') || item.activity.includes('Work/Study')
     );
     
-    // Calculate today's date
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Calculate time in minutes for a given time string (e.g., "14:30" → 870 minutes)
     const timeToMinutes = (timeStr: string) => {
       const [hours, minutes] = timeStr.split(':').map(Number);
       return hours * 60 + minutes;
     };
     
-    // Convert minutes back to time string (e.g., 870 → "14:30")
     const minutesToTime = (minutes: number) => {
       const hours = Math.floor(minutes / 60);
       const mins = minutes % 60;
       return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
     };
     
-    // Determine available slots for each day over the next week
     const scheduled: ScheduledTask[] = [];
     
-    // Plan for the next 7 days
     for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
       const currentDate = new Date(today);
       currentDate.setDate(today.getDate() + dayOffset);
       
-      // Skip if we've already scheduled the maximum tasks for this day
       const tasksForThisDay = scheduled.filter(
         s => s.date.toDateString() === currentDate.toDateString()
       ).length;
@@ -352,21 +326,17 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         continue;
       }
       
-      // Clone the available slots for this day
       const daySlots = JSON.parse(JSON.stringify(availableSlots));
       
-      // Sort slots based on preferred study time
       daySlots.sort((a: ScheduleItem, b: ScheduleItem) => {
         const timeA = timeToMinutes(a.startTime);
         const timeB = timeToMinutes(b.startTime);
         
-        // Define time ranges
         const isMorning = (t: number) => t >= 5 * 60 && t < 12 * 60;
         const isAfternoon = (t: number) => t >= 12 * 60 && t < 17 * 60;
         const isEvening = (t: number) => t >= 17 * 60 && t < 22 * 60;
         const isNight = (t: number) => t >= 22 * 60 || t < 5 * 60;
         
-        // Score based on preferred time
         const getTimePreferenceScore = (time: number) => {
           switch (userPreferences.preferredStudyTime) {
             case 'morning': return isMorning(time) ? 3 : isAfternoon(time) ? 2 : isEvening(time) ? 1 : 0;
@@ -380,20 +350,16 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return getTimePreferenceScore(timeB) - getTimePreferenceScore(timeA);
       });
       
-      // For each available slot in the day
       for (const slot of daySlots) {
-        // Skip if we've already scheduled the maximum tasks for this day
         if (scheduled.filter(s => s.date.toDateString() === currentDate.toDateString()).length 
             >= userPreferences.maxTasksPerDay) {
           break;
         }
         
-        // Calculate slot duration in minutes
         const slotStart = timeToMinutes(slot.startTime);
         const slotEnd = timeToMinutes(slot.endTime);
         const slotDuration = slotEnd - slotStart;
         
-        // Get remaining tasks that still need scheduling
         const remainingTasks = sortedTasks.filter(
           task => !scheduled.some(st => st.task.id === task.id)
         );
@@ -402,18 +368,14 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           break;
         }
         
-        // Try to fit tasks into this time slot with appropriate breaks
         let currentTime = slotStart;
         
         while (currentTime < slotEnd && remainingTasks.length > 0) {
           const nextTask = remainingTasks[0];
           
-          // Determine task duration (use estimated or default to study session duration)
           const taskDuration = nextTask.estimatedDuration || userPreferences.studySessionDuration;
           
-          // Check if task fits in remaining time
           if (currentTime + taskDuration <= slotEnd) {
-            // Schedule this task
             const taskStartTime = minutesToTime(currentTime);
             const taskEndTime = minutesToTime(currentTime + taskDuration);
             
@@ -425,13 +387,10 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
               date: new Date(currentDate),
             });
             
-            // Remove this task from consideration
             sortedTasks.splice(sortedTasks.findIndex(t => t.id === nextTask.id), 1);
             
-            // Move time forward and add a break
             currentTime += taskDuration + userPreferences.breakDuration;
           } else {
-            // Can't fit any more tasks in this slot
             break;
           }
         }
@@ -463,9 +422,33 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       )
     );
     
-    // Add points for completing a task
     setPoints(prev => prev + 10);
     toast.success("Task completed! +10 points");
+  };
+
+  const uncompleteTask = (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    
+    if (task && task.completed && task.completedAt) {
+      const now = new Date();
+      const completedTime = new Date(task.completedAt);
+      const diffInSeconds = Math.floor((now.getTime() - completedTime.getTime()) / 1000);
+      
+      if (diffInSeconds <= 30) {
+        setTasks(prev => 
+          prev.map(t => 
+            t.id === id 
+              ? { ...t, completed: false, completedAt: undefined } 
+              : t
+          )
+        );
+        
+        setPoints(prev => prev - 10);
+        toast.info("Task marked as incomplete");
+      } else {
+        toast.error("Can only undo within 30 seconds of completion");
+      }
+    }
   };
 
   const deleteTask = (id: string) => {
@@ -556,6 +539,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         userPreferences,
         addTask,
         completeTask,
+        uncompleteTask,
         deleteTask,
         updateTask,
         addSchedule,

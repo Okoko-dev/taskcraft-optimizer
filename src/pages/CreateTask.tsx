@@ -23,6 +23,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const CreateTask = () => {
   const navigate = useNavigate();
@@ -34,6 +35,18 @@ const CreateTask = () => {
   const [priority, setPriority] = useState<TaskPriority>('Medium');
   const [deadline, setDeadline] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  
+  const categories: TaskCategory[] = [
+    'Education', 
+    'Personal', 
+    'Household', 
+    'Academic Tasks', 
+    'Personal Development', 
+    'Daily Responsibilities', 
+    'Life Management', 
+    'Rewards', 
+    'Breaks'
+  ];
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,32 +92,23 @@ const CreateTask = () => {
           
           <div>
             <label className="block text-primary text-xl mb-2">Category</label>
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                type="button"
-                variant={category === 'Education' ? 'default' : 'outline'}
-                className={category === 'Education' ? 'bg-primary text-white hover:bg-primary-dark' : 'bg-taskace-card border-gray-700 text-white hover:bg-gray-800'}
-                onClick={() => setCategory('Education')}
-              >
-                Education
-              </Button>
-              <Button
-                type="button"
-                variant={category === 'Personal' ? 'default' : 'outline'}
-                className={category === 'Personal' ? 'bg-primary text-white hover:bg-primary-dark' : 'bg-taskace-card border-gray-700 text-white hover:bg-gray-800'}
-                onClick={() => setCategory('Personal')}
-              >
-                Personal
-              </Button>
-              <Button
-                type="button"
-                variant={category === 'Household' ? 'default' : 'outline'}
-                className={category === 'Household' ? 'bg-primary text-white hover:bg-primary-dark' : 'bg-taskace-card border-gray-700 text-white hover:bg-gray-800'}
-                onClick={() => setCategory('Household')}
-              >
-                Household
-              </Button>
-            </div>
+            <Select 
+              value={category} 
+              onValueChange={(value) => setCategory(value as TaskCategory)}
+            >
+              <SelectTrigger className="bg-white/10 border-gray-700 text-white">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent className="bg-taskace-dark border-gray-700 max-h-[240px]">
+                <ScrollArea className="max-h-[200px]">
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat} className="text-white hover:bg-gray-800">
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </ScrollArea>
+              </SelectContent>
+            </Select>
           </div>
           
           <div>

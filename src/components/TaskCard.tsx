@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Task, useTaskManager } from '@/context/TaskContext';
-import { Check, Calendar, Flag } from 'lucide-react';
+import { Check, Calendar, Flag, Undo } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -10,7 +10,7 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-  const { completeTask, deleteTask } = useTaskManager();
+  const { completeTask, uncompleteTask, deleteTask } = useTaskManager();
   
   const priorityColors = {
     High: 'bg-red-500',
@@ -21,7 +21,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const categoryColors = {
     Education: 'bg-purple-500',
     Personal: 'bg-green-500',
-    Household: 'bg-orange-500'
+    Household: 'bg-orange-500',
+    'Academic Tasks': 'bg-blue-500',
+    'Personal Development': 'bg-indigo-500',
+    'Daily Responsibilities': 'bg-amber-500',
+    'Life Management': 'bg-teal-500',
+    'Rewards': 'bg-pink-500',
+    'Breaks': 'bg-cyan-500'
   };
   
   const isTaskDueSoon = () => {
@@ -31,8 +37,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     return differenceInDays <= 2 && !task.completed;
   };
 
+  const canUndo = () => {
+    if (task.completed && task.completedAt) {
+      const now = new Date();
+      const completedTime = new Date(task.completedAt);
+      const diffInSeconds = Math.floor((now.getTime() - completedTime.getTime()) / 1000);
+      return diffInSeconds <= 30;
+    }
+    return false;
+  };
+
   return (
-    <div className={`task-card ${task.completed ? 'opacity-60' : ''} relative overflow-hidden`}>
+    <div className={`task-card ${task.completed ? 'opacity-60' : ''} relative overflow-hidden bg-[#283445] p-4 rounded-lg border border-[#3D4A5C]`}>
       {isTaskDueSoon() && (
         <div className="absolute top-0 right-0 bg-red-500 text-xs px-2 py-1 text-white rounded-bl-md">
           Due Soon!
@@ -54,7 +70,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <span className={`text-xs px-2 py-1 rounded-full text-white ${categoryColors[task.category]}`}>
+          <span className={`text-xs px-2 py-1 rounded-full text-white ${categoryColors[task.category as keyof typeof categoryColors] || 'bg-gray-500'}`}>
             {task.category}
           </span>
           
@@ -72,6 +88,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             onClick={() => completeTask(task.id)}
           >
             <Check className="w-4 h-4" />
+          </Button>
+        ) : canUndo() ? (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 rounded-full w-8 h-8 p-0"
+            onClick={() => uncompleteTask(task.id)}
+            title="Undo completion (within 30 seconds)"
+          >
+            <Undo className="w-4 h-4" />
           </Button>
         ) : (
           <span className="text-xs text-primary">Completed</span>

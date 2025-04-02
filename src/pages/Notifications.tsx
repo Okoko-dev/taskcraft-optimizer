@@ -20,7 +20,7 @@ const Notifications = () => {
     const deadline = new Date(task.deadline);
     const differenceInDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 3600 * 24));
     
-    return differenceInDays <= 3;
+    return differenceInDays <= 3 && differenceInDays > 0;
   }).sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
   
   // Get overdue tasks
@@ -53,7 +53,7 @@ const Notifications = () => {
               {overdueTasks.map(task => (
                 <div 
                   key={task.id} 
-                  className="bg-red-500/10 border border-red-500/20 p-4 rounded-lg"
+                  className="bg-red-500/10 border border-red-500/20 p-4 rounded-lg cursor-pointer"
                   onClick={() => navigate('/tasks')}
                 >
                   <div className="flex justify-between">
@@ -100,7 +100,7 @@ const Notifications = () => {
                 return (
                   <div 
                     key={task.id} 
-                    className="bg-[#283445] p-4 rounded-lg border border-[#3D4A5C]"
+                    className="bg-[#283445] p-4 rounded-lg border border-[#3D4A5C] cursor-pointer"
                     onClick={() => navigate('/tasks')}
                   >
                     <div className="flex justify-between">

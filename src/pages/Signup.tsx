@@ -6,7 +6,7 @@ import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from "sonner";
-import { User, Mail, Lock } from 'lucide-react';
+import { User, Mail, Lock, KeyRound } from 'lucide-react';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -90,11 +90,11 @@ const Signup = () => {
               
               <div className="flex items-center space-x-3">
                 <div className="w-6 h-6 flex items-center justify-center text-gray-400">
-                  <Lock className="w-5 h-5" />
+                  <KeyRound className="w-5 h-5" />
                 </div>
                 <Input
                   type="password"
-                  placeholder="Password Again"
+                  placeholder="Confirm Password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="bg-transparent border-none text-white placeholder:text-gray-500 focus-visible:ring-0"

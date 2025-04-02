@@ -9,20 +9,23 @@ const NavBar = () => {
   const navigate = useNavigate();
   const { tasks } = useTaskManager();
   
-  // Count due soon tasks for notification badge
-  const dueSoonCount = tasks.filter(task => {
+  // Count due soon and overdue tasks for notification badge
+  const notificationCount = tasks.filter(task => {
     if (task.completed) return false;
+    
     const today = new Date();
     const deadline = new Date(task.deadline);
     const differenceInDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 3600 * 24));
-    return differenceInDays <= 3;
+    
+    // Count overdue tasks or tasks due within 3 days
+    return differenceInDays <= 3 || deadline < today;
   }).length;
   
   const navItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: Calendar, label: 'Schedule', path: '/schedules' },
     { icon: ListTodo, label: 'Tasks', path: '/tasks' },
-    { icon: Bell, label: 'Notifications', path: '/notifications', badge: dueSoonCount },
+    { icon: Bell, label: 'Notifications', path: '/notifications', badge: notificationCount },
     { icon: User, label: 'Profile', path: '/profile' },
   ];
   

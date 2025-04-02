@@ -16,6 +16,7 @@ type AuthContextType = {
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   resetPassword: (email: string) => Promise<void>;
+  updateProfile: (updates: Partial<User>) => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   signup: async () => {},
   logout: () => {},
   resetPassword: async () => {},
+  updateProfile: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -116,8 +118,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Add the updateProfile function
+  const updateProfile = (updates: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      localStorage.setItem('taskace_user', JSON.stringify(updatedUser));
+      toast.success("Profile updated successfully!");
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, resetPassword }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      signup, 
+      logout, 
+      resetPassword,
+      updateProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   );

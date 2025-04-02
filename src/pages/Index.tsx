@@ -21,7 +21,7 @@ const Index = () => {
         </h1>
         
         <p className="text-gray-400 mb-8 max-w-md">
-          Create an account or log in to explore about our app
+          Create an account or log in to explore our AI-driven study planner
         </p>
         
         <div className="w-full max-w-md space-y-6">

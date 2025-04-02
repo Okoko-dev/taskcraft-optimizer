@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Task, useTaskManager } from '@/context/TaskContext';
 import { Check, Calendar, Flag, Undo, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ interface TaskCardProps {
 
 const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const { completeTask, uncompleteTask, deleteTask } = useTaskManager();
+  const [canBeUndone, setCanBeUndone] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
   
   const priorityColors = {
     High: 'bg-red-500',
@@ -31,21 +33,47 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     'Breaks': 'bg-cyan-500'
   };
   
+  useEffect(() => {
+    let intervalId: number | null = null;
+    
+    if (task.completed && task.completedAt) {
+      const updateUndoStatus = () => {
+        const now = new Date();
+        const completedTime = new Date(task.completedAt!);
+        const diffInSeconds = Math.floor((now.getTime() - completedTime.getTime()) / 1000);
+        const secondsLeft = 30 - diffInSeconds;
+        
+        if (secondsLeft > 0) {
+          setCanBeUndone(true);
+          setRemainingSeconds(secondsLeft);
+        } else {
+          setCanBeUndone(false);
+          setRemainingSeconds(0);
+          if (intervalId) {
+            clearInterval(intervalId);
+          }
+        }
+      };
+      
+      // Run immediately
+      updateUndoStatus();
+      
+      // Then set interval
+      intervalId = window.setInterval(updateUndoStatus, 1000);
+      
+      return () => {
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+      };
+    }
+  }, [task.completed, task.completedAt]);
+  
   const isTaskDueSoon = () => {
     const today = new Date();
     const deadline = new Date(task.deadline);
     const differenceInDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 3600 * 24));
     return differenceInDays <= 2 && !task.completed;
-  };
-
-  const canUndo = () => {
-    if (task.completed && task.completedAt) {
-      const now = new Date();
-      const completedTime = new Date(task.completedAt);
-      const diffInSeconds = Math.floor((now.getTime() - completedTime.getTime()) / 1000);
-      return diffInSeconds <= 30; // 30-second window for undo
-    }
-    return false;
   };
 
   const handleCompleteTask = () => {
@@ -109,15 +137,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             >
               <Check className="w-4 h-4" />
             </Button>
-          ) : canUndo() ? (
+          ) : canBeUndone ? (
             <Button 
               variant="ghost" 
               size="sm" 
               className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 rounded-full w-8 h-8 p-0"
               onClick={handleUndoComplete}
-              title="Undo completion (within 30 seconds)"
+              title={`Undo completion (${remainingSeconds}s left)`}
             >
               <Undo className="w-4 h-4" />
+              <span className="sr-only">{remainingSeconds}s</span>
             </Button>
           ) : (
             <span className="text-xs text-primary">Completed</span>

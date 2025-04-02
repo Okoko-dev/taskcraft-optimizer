@@ -1,57 +1,55 @@
 
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, CheckSquare, Calendar, User, Plus } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Home, Calendar, ListTodo, User, Bell } from 'lucide-react';
+import { useTaskManager } from '@/context/TaskContext';
 
-const NavBar: React.FC = () => {
-  const navigate = useNavigate();
+const NavBar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { tasks } = useTaskManager();
   
-  const isActive = (path: string) => location.pathname === path;
-
+  // Count due soon tasks for notification badge
+  const dueSoonCount = tasks.filter(task => {
+    if (task.completed) return false;
+    const today = new Date();
+    const deadline = new Date(task.deadline);
+    const differenceInDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 3600 * 24));
+    return differenceInDays <= 3;
+  }).length;
+  
+  const navItems = [
+    { icon: Home, label: 'Dashboard', path: '/dashboard' },
+    { icon: Calendar, label: 'Schedule', path: '/schedules' },
+    { icon: ListTodo, label: 'Tasks', path: '/tasks' },
+    { icon: Bell, label: 'Notifications', path: '/notifications', badge: dueSoonCount },
+    { icon: User, label: 'Profile', path: '/profile' },
+  ];
+  
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#1F2A39] border-t border-[#3D4A5C] py-2 px-4">
-      <div className="flex justify-around items-center">
-        <button 
-          onClick={() => navigate('/dashboard')} 
-          className={`flex flex-col items-center p-2 ${isActive('/dashboard') ? 'text-[#41E0B5]' : 'text-gray-400'}`}
-        >
-          <Home size={24} />
-          <span className="text-xs mt-1">Home</span>
-        </button>
-        
-        <button 
-          onClick={() => navigate('/tasks')} 
-          className={`flex flex-col items-center p-2 ${isActive('/tasks') ? 'text-[#41E0B5]' : 'text-gray-400'}`}
-        >
-          <CheckSquare size={24} />
-          <span className="text-xs mt-1">Tasks</span>
-        </button>
-        
-        <button 
-          onClick={() => navigate('/create-task')} 
-          className="flex flex-col items-center"
-        >
-          <div className="bg-[#41E0B5] rounded-full p-3 -mt-8 shadow-lg">
-            <Plus size={24} className="text-[#1F2A39]" />
-          </div>
-        </button>
-        
-        <button 
-          onClick={() => navigate('/schedules')} 
-          className={`flex flex-col items-center p-2 ${isActive('/schedules') ? 'text-[#41E0B5]' : 'text-gray-400'}`}
-        >
-          <Calendar size={24} />
-          <span className="text-xs mt-1">Schedules</span>
-        </button>
-        
-        <button 
-          onClick={() => navigate('/profile')} 
-          className={`flex flex-col items-center p-2 ${isActive('/profile') ? 'text-[#41E0B5]' : 'text-gray-400'}`}
-        >
-          <User size={24} />
-          <span className="text-xs mt-1">Profile</span>
-        </button>
+    <div className="fixed bottom-0 left-0 right-0 bg-taskace-dark border-t border-gray-800">
+      <div className="max-w-lg mx-auto px-4 py-2 flex justify-between">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.path}
+              className={`flex flex-col items-center py-2 px-3 relative ${
+                isActive ? 'text-primary' : 'text-gray-400 hover:text-gray-200'
+              }`}
+              onClick={() => navigate(item.path)}
+            >
+              <item.icon className="w-6 h-6 mb-1" />
+              <span className="text-xs">{item.label}</span>
+              
+              {item.badge && item.badge > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {item.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

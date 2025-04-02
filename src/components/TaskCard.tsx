@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Task, useTaskManager } from '@/context/TaskContext';
-import { Check, Calendar, Flag, Undo } from 'lucide-react';
+import { Check, Calendar, Flag, Undo, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -80,28 +80,39 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
           </div>
         </div>
         
-        {!task.completed ? (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="bg-primary/20 hover:bg-primary/30 text-primary-foreground rounded-full w-8 h-8 p-0"
-            onClick={() => completeTask(task.id)}
+        <div className="flex space-x-2">
+          {!task.completed ? (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="bg-primary/20 hover:bg-primary/30 text-primary-foreground rounded-full w-8 h-8 p-0"
+              onClick={() => completeTask(task.id)}
+            >
+              <Check className="w-4 h-4" />
+            </Button>
+          ) : canUndo() ? (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 rounded-full w-8 h-8 p-0"
+              onClick={() => uncompleteTask(task.id)}
+              title="Undo completion (within 30 seconds)"
+            >
+              <Undo className="w-4 h-4" />
+            </Button>
+          ) : (
+            <span className="text-xs text-primary">Completed</span>
+          )}
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full w-8 h-8 p-0"
+            onClick={() => deleteTask(task.id)}
           >
-            <Check className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" />
           </Button>
-        ) : canUndo() ? (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 rounded-full w-8 h-8 p-0"
-            onClick={() => uncompleteTask(task.id)}
-            title="Undo completion (within 30 seconds)"
-          >
-            <Undo className="w-4 h-4" />
-          </Button>
-        ) : (
-          <span className="text-xs text-primary">Completed</span>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -1,3 +1,6 @@
+
+// This file is very large, so we'll only modify the specific parts needed
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { useAuth } from './AuthContext';
@@ -274,7 +277,19 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       const categoryScore = (category: TaskCategory) => {
-        return category === 'Education' ? 3 : (category === 'Personal' ? 2 : 1);
+        // Adjust scores based on categories
+        const categoryValues: Record<TaskCategory, number> = {
+          'Education': 5,
+          'Personal': 3,
+          'Household': 2,
+          'Academic Tasks': 5,
+          'Personal Development': 4,
+          'Daily Responsibilities': 4, 
+          'Life Management': 3,
+          'Rewards': 1,
+          'Breaks': 1
+        };
+        return categoryValues[category] || 1;
       };
       
       const durationScore = (task: Task) => {
@@ -312,19 +327,21 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
     };
     
+    const formatTimeWithAmPm = (timeStr: string) => {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    };
+    
     const scheduled: ScheduledTask[] = [];
+    
+    // Prevent scheduling the same task multiple times
+    const scheduledTaskIds = new Set<string>();
     
     for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
       const currentDate = new Date(today);
       currentDate.setDate(today.getDate() + dayOffset);
-      
-      const tasksForThisDay = scheduled.filter(
-        s => s.date.toDateString() === currentDate.toDateString()
-      ).length;
-      
-      if (tasksForThisDay >= userPreferences.maxTasksPerDay) {
-        continue;
-      }
       
       const daySlots = JSON.parse(JSON.stringify(availableSlots));
       
@@ -351,45 +368,82 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       for (const slot of daySlots) {
-        if (scheduled.filter(s => s.date.toDateString() === currentDate.toDateString()).length 
-            >= userPreferences.maxTasksPerDay) {
-          break;
-        }
-        
         const slotStart = timeToMinutes(slot.startTime);
         const slotEnd = timeToMinutes(slot.endTime);
         const slotDuration = slotEnd - slotStart;
         
-        const remainingTasks = sortedTasks.filter(
-          task => !scheduled.some(st => st.task.id === task.id)
-        );
+        // Find suitable tasks for this time slot based on category and time of day
+        const suitableTasks = sortedTasks.filter(task => {
+          // Skip already scheduled tasks
+          if (scheduledTaskIds.has(task.id)) return false;
+          
+          // Don't assign academic or work tasks to late night slots
+          const isLateNight = slotStart >= 22 * 60 || slotStart < 6 * 60;
+          const isWorkRelated = ['Education', 'Academic Tasks'].includes(task.category);
+          
+          if (isLateNight && isWorkRelated) return false;
+          
+          // Match breaks and rewards to short time slots
+          const isShortSlot = slotDuration <= 60; // 1 hour or less
+          const isBreakOrReward = ['Breaks', 'Rewards'].includes(task.category);
+          
+          if (isShortSlot && isBreakOrReward) return true;
+          if (isBreakOrReward && !isShortSlot) return false;
+          
+          // Match daily responsibilities to morning slots
+          const isMorning = slotStart >= 6 * 60 && slotStart < 12 * 60;
+          const isDailyResponsibility = task.category === 'Daily Responsibilities';
+          
+          if (isDailyResponsibility && isMorning) return true;
+          
+          return true;
+        });
         
-        if (remainingTasks.length === 0) {
-          break;
-        }
+        if (suitableTasks.length === 0) continue;
         
         let currentTime = slotStart;
         
-        while (currentTime < slotEnd && remainingTasks.length > 0) {
-          const nextTask = remainingTasks[0];
+        while (currentTime < slotEnd && suitableTasks.length > 0) {
+          const nextTask = suitableTasks[0];
           
-          const taskDuration = nextTask.estimatedDuration || userPreferences.studySessionDuration;
+          // Estimate appropriate duration based on task category and priority
+          let estimatedDuration = nextTask.estimatedDuration || userPreferences.studySessionDuration;
           
-          if (currentTime + taskDuration <= slotEnd) {
+          // Adjust duration based on task category
+          if (nextTask.category === 'Breaks') {
+            estimatedDuration = Math.min(30, estimatedDuration); // Breaks should be short
+          } else if (nextTask.category === 'Academic Tasks' || nextTask.category === 'Education') {
+            // Academic tasks might need longer sessions
+            estimatedDuration = Math.max(estimatedDuration, 45);
+          }
+          
+          // Adjust duration based on priority
+          if (nextTask.priority === 'High') {
+            estimatedDuration = Math.max(estimatedDuration, 50); // High priority tasks get more time
+          } else if (nextTask.priority === 'Low') {
+            estimatedDuration = Math.min(estimatedDuration, 40); // Low priority tasks get less time
+          }
+          
+          // Make sure the task fits in the remaining slot time
+          if (currentTime + estimatedDuration <= slotEnd) {
             const taskStartTime = minutesToTime(currentTime);
-            const taskEndTime = minutesToTime(currentTime + taskDuration);
+            const taskEndTime = minutesToTime(currentTime + estimatedDuration);
             
             scheduled.push({
               task: nextTask,
-              timeSlot: `${taskStartTime} - ${taskEndTime}`,
+              timeSlot: `${formatTimeWithAmPm(taskStartTime)} - ${formatTimeWithAmPm(taskEndTime)}`,
               startTime: taskStartTime,
               endTime: taskEndTime,
               date: new Date(currentDate),
             });
             
-            sortedTasks.splice(sortedTasks.findIndex(t => t.id === nextTask.id), 1);
+            // Mark this task as scheduled so we don't schedule it again
+            scheduledTaskIds.add(nextTask.id);
             
-            currentTime += taskDuration + userPreferences.breakDuration;
+            // Remove the task from consideration
+            suitableTasks.shift();
+            
+            currentTime += estimatedDuration + userPreferences.breakDuration;
           } else {
             break;
           }

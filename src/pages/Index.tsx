@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
+import { Mail, Lock } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -45,15 +46,15 @@ const Index = () => {
           
           <div className="bg-taskace-gray p-6 rounded-lg space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 flex items-center justify-center">
-                <img src="/lovable-uploads/6036f38f-be67-4a02-90ac-c4df3c0f61ea.png" alt="Email" className="w-6 h-6" />
+              <div className="w-6 h-6 flex items-center justify-center text-gray-400">
+                <Mail className="w-5 h-5" />
               </div>
               <p className="text-gray-300">Email</p>
             </div>
             
             <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 flex items-center justify-center">
-                <img src="/lovable-uploads/db97e3e6-097d-452f-acd0-8689bc8c75fa.png" alt="Password" className="w-6 h-6" />
+              <div className="w-6 h-6 flex items-center justify-center text-gray-400">
+                <Lock className="w-5 h-5" />
               </div>
               <p className="text-gray-300">Password</p>
             </div>

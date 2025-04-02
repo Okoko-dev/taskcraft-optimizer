@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTaskManager } from '@/context/TaskContext';
@@ -8,14 +8,17 @@ import NavBar from '@/components/NavBar';
 import ProgressBar from '@/components/ProgressBar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, LogOut } from 'lucide-react';
+import { Edit, LogOut, Camera } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, updateProfile } = useAuth();
   const { tasks, points } = useTaskManager();
   const [activeTab, setActiveTab] = useState('account');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Calculate task stats
   const totalTasks = tasks.length;
@@ -25,6 +28,26 @@ const Profile = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+  
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // In a real app, you'd upload the file to a server
+      // For now, we'll use FileReader to get a data URL
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result && typeof reader.result === 'string') {
+          updateProfile({ avatar: reader.result });
+          toast.success('Profile photo updated!');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
   
   // Mock user data
@@ -44,11 +67,26 @@ const Profile = () => {
       <main className="max-w-lg mx-auto pb-24">
         <div className="w-full h-40 bg-gradient-to-b from-gray-800 to-transparent relative">
           <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
-            <div className="w-24 h-24 rounded-full border-4 border-taskace-dark overflow-hidden">
-              <img 
-                src={user?.avatar || "/lovable-uploads/7156323a-9b42-44ad-89f9-d6477e9a511a.png"} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
+            <div className="relative w-24 h-24 rounded-full border-4 border-taskace-dark overflow-hidden group">
+              <Avatar className="w-full h-full">
+                <AvatarImage 
+                  src={user?.avatar || "/lovable-uploads/7156323a-9b42-44ad-89f9-d6477e9a511a.png"} 
+                  alt="Profile" 
+                />
+                <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
+              </Avatar>
+              <div 
+                className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                onClick={handleAvatarClick}
+              >
+                <Camera className="text-white w-6 h-6" />
+              </div>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*"
+                onChange={handleFileChange}
               />
             </div>
           </div>

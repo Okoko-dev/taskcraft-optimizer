@@ -6,6 +6,7 @@ import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from "sonner";
+import { User, Mail, Lock } from 'lucide-react';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -49,8 +50,8 @@ const Signup = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-taskace-gray p-6 rounded-lg space-y-4">
               <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <img src="/lovable-uploads/4c5dff63-3a08-467b-bef1-3eed2db47f0c.png" alt="User" className="w-6 h-6" />
+                <div className="w-6 h-6 flex items-center justify-center text-gray-400">
+                  <User className="w-5 h-5" />
                 </div>
                 <Input
                   type="text"
@@ -62,8 +63,8 @@ const Signup = () => {
               </div>
               
               <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <img src="/lovable-uploads/6036f38f-be67-4a02-90ac-c4df3c0f61ea.png" alt="Email" className="w-6 h-6" />
+                <div className="w-6 h-6 flex items-center justify-center text-gray-400">
+                  <Mail className="w-5 h-5" />
                 </div>
                 <Input
                   type="email"
@@ -75,8 +76,8 @@ const Signup = () => {
               </div>
               
               <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <img src="/lovable-uploads/db97e3e6-097d-452f-acd0-8689bc8c75fa.png" alt="Password" className="w-6 h-6" />
+                <div className="w-6 h-6 flex items-center justify-center text-gray-400">
+                  <Lock className="w-5 h-5" />
                 </div>
                 <Input
                   type="password"
@@ -88,8 +89,8 @@ const Signup = () => {
               </div>
               
               <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <img src="/lovable-uploads/db97e3e6-097d-452f-acd0-8689bc8c75fa.png" alt="Confirm Password" className="w-6 h-6" />
+                <div className="w-6 h-6 flex items-center justify-center text-gray-400">
+                  <Lock className="w-5 h-5" />
                 </div>
                 <Input
                   type="password"

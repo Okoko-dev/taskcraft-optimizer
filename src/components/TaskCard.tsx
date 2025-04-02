@@ -4,6 +4,7 @@ import { Task, useTaskManager } from '@/context/TaskContext';
 import { Check, Calendar, Flag, Undo, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from "sonner";
 
 interface TaskCardProps {
   task: Task;
@@ -42,9 +43,26 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       const now = new Date();
       const completedTime = new Date(task.completedAt);
       const diffInSeconds = Math.floor((now.getTime() - completedTime.getTime()) / 1000);
-      return diffInSeconds <= 30;
+      return diffInSeconds <= 30; // 30-second window for undo
     }
     return false;
+  };
+
+  const handleCompleteTask = () => {
+    completeTask(task.id);
+    toast.success(`Task "${task.title}" completed!`, {
+      description: "You have 30 seconds to undo this action."
+    });
+  };
+
+  const handleUndoComplete = () => {
+    uncompleteTask(task.id);
+    toast.info(`Completion of "${task.title}" undone`);
+  };
+
+  const handleDeleteTask = () => {
+    deleteTask(task.id);
+    toast.success(`Task "${task.title}" deleted`);
   };
 
   return (
@@ -86,7 +104,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
               variant="ghost" 
               size="sm" 
               className="bg-primary/20 hover:bg-primary/30 text-primary-foreground rounded-full w-8 h-8 p-0"
-              onClick={() => completeTask(task.id)}
+              onClick={handleCompleteTask}
+              title="Mark as completed"
             >
               <Check className="w-4 h-4" />
             </Button>
@@ -95,7 +114,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
               variant="ghost" 
               size="sm" 
               className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 rounded-full w-8 h-8 p-0"
-              onClick={() => uncompleteTask(task.id)}
+              onClick={handleUndoComplete}
               title="Undo completion (within 30 seconds)"
             >
               <Undo className="w-4 h-4" />
@@ -108,7 +127,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             variant="ghost"
             size="sm"
             className="bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full w-8 h-8 p-0"
-            onClick={() => deleteTask(task.id)}
+            onClick={handleDeleteTask}
+            title="Delete task"
           >
             <Trash2 className="w-4 h-4" />
           </Button>

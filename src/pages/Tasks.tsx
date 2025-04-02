@@ -29,17 +29,18 @@ const Tasks = () => {
     'Breaks'
   ];
   
-  // Filter tasks based on search term, active category, and completion status (exclude completed tasks)
+  // Filter tasks based on search term and active category
   const filteredTasks = tasks.filter(task => {
-    // Skip completed tasks
-    if (task.completed) return false;
-    
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                         task.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeCategory === 'All' || task.category === activeCategory;
     return matchesSearch && matchesCategory;
   }).sort((a, b) => {
-    // Sort by priority
+    // Sort by completion status, then by priority
+    if (a.completed !== b.completed) {
+      return a.completed ? 1 : -1;
+    }
+    
     const priorityOrder = { High: 3, Medium: 2, Low: 1 };
     return priorityOrder[b.priority] - priorityOrder[a.priority];
   });
@@ -99,7 +100,7 @@ const Tasks = () => {
             ))
           ) : (
             <div className="text-center py-10 text-gray-400">
-              <p className="mb-2">No active tasks found</p>
+              <p className="mb-2">No tasks found</p>
               <Button 
                 variant="outline" 
                 className="border-primary text-primary hover:bg-primary/10"

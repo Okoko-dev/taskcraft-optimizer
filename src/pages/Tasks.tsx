@@ -29,21 +29,20 @@ const Tasks = () => {
     'Breaks'
   ];
   
-  // Filter tasks based on search term and active category
-  const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  // Filter tasks based on search term, active category, and exclude completed tasks
+  const filteredTasks = tasks
+    .filter(task => !task.completed) // Exclude completed tasks
+    .filter(task => {
+      const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                         task.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = activeCategory === 'All' || task.category === activeCategory;
-    return matchesSearch && matchesCategory;
-  }).sort((a, b) => {
-    // Sort by completion status, then by priority
-    if (a.completed !== b.completed) {
-      return a.completed ? 1 : -1;
-    }
-    
-    const priorityOrder = { High: 3, Medium: 2, Low: 1 };
-    return priorityOrder[b.priority] - priorityOrder[a.priority];
-  });
+      const matchesCategory = activeCategory === 'All' || task.category === activeCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      // Sort by priority
+      const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    });
 
   return (
     <div className="min-h-screen bg-taskace-dark text-white pb-24">

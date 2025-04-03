@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Task, useTaskManager } from '@/context/TaskContext';
-import { Check, Calendar, Flag, Undo, Trash2 } from 'lucide-react';
+import { Check, Calendar, Undo, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from "sonner";
 
 interface TaskCardProps {
   task: Task;
@@ -11,6 +12,8 @@ interface TaskCardProps {
 
 const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const { completeTask, uncompleteTask, deleteTask } = useTaskManager();
+  const [secondsLeft, setSecondsLeft] = useState<number>(0);
+  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   
   const priorityColors = {
     High: 'bg-red-500',
@@ -30,6 +33,42 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     'Breaks': 'bg-cyan-500'
   };
   
+  useEffect(() => {
+    if (task.completed && task.completedAt) {
+      const now = new Date();
+      const completedTime = new Date(task.completedAt);
+      const diffInSeconds = Math.floor((now.getTime() - completedTime.getTime()) / 1000);
+      const timeLeft = Math.max(0, 30 - diffInSeconds);
+      
+      setSecondsLeft(timeLeft);
+      
+      if (timeLeft > 0) {
+        const intervalId = setInterval(() => {
+          setSecondsLeft(prev => {
+            const newTime = prev - 1;
+            if (newTime <= 0) {
+              clearInterval(intervalId);
+              return 0;
+            }
+            return newTime;
+          });
+        }, 1000);
+        
+        setTimer(intervalId);
+        
+        return () => {
+          clearInterval(intervalId);
+        };
+      }
+    } else {
+      if (timer) {
+        clearInterval(timer);
+        setTimer(null);
+      }
+      setSecondsLeft(0);
+    }
+  }, [task.completed, task.completedAt, timer]);
+  
   const isTaskDueSoon = () => {
     const today = new Date();
     const deadline = new Date(task.deadline);
@@ -37,18 +76,27 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     return differenceInDays <= 2 && !task.completed;
   };
 
-  const canUndo = () => {
-    if (task.completed && task.completedAt) {
-      const now = new Date();
-      const completedTime = new Date(task.completedAt);
-      const diffInSeconds = Math.floor((now.getTime() - completedTime.getTime()) / 1000);
-      return diffInSeconds <= 30;
+  const handleComplete = () => {
+    completeTask(task.id);
+    toast.success("Task completed! You can undo this action within 30 seconds.");
+  };
+
+  const handleUndo = () => {
+    uncompleteTask(task.id);
+    toast.info("Task marked as incomplete");
+    if (timer) {
+      clearInterval(timer);
+      setTimer(null);
     }
-    return false;
+  };
+
+  const handleDelete = () => {
+    deleteTask(task.id);
+    toast.success("Task deleted successfully!");
   };
 
   return (
-    <div className={`task-card ${task.completed ? 'opacity-60' : ''} relative overflow-hidden bg-[#283445] p-4 rounded-lg border border-[#3D4A5C]`}>
+    <div className={`task-card relative overflow-hidden bg-[#283445] p-4 rounded-lg border border-[#3D4A5C]`}>
       {isTaskDueSoon() && (
         <div className="absolute top-0 right-0 bg-red-500 text-xs px-2 py-1 text-white rounded-bl-md">
           Due Soon!
@@ -56,7 +104,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       )}
       
       <div className="flex justify-between items-start mb-2">
-        <h3 className={`font-semibold ${task.completed ? 'line-through' : ''}`}>
+        <h3 className={`font-semibold`}>
           {task.title}
         </h3>
         
@@ -81,34 +129,20 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
         </div>
         
         <div className="flex space-x-2">
-          {!task.completed ? (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="bg-primary/20 hover:bg-primary/30 text-primary-foreground rounded-full w-8 h-8 p-0"
-              onClick={() => completeTask(task.id)}
-            >
-              <Check className="w-4 h-4" />
-            </Button>
-          ) : canUndo() ? (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 rounded-full w-8 h-8 p-0"
-              onClick={() => uncompleteTask(task.id)}
-              title="Undo completion (within 30 seconds)"
-            >
-              <Undo className="w-4 h-4" />
-            </Button>
-          ) : (
-            <span className="text-xs text-primary">Completed</span>
-          )}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="bg-primary/20 hover:bg-primary/30 text-primary-foreground rounded-full w-8 h-8 p-0"
+            onClick={handleComplete}
+          >
+            <Check className="w-4 h-4" />
+          </Button>
           
           <Button
             variant="ghost"
             size="sm"
             className="bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full w-8 h-8 p-0"
-            onClick={() => deleteTask(task.id)}
+            onClick={handleDelete}
           >
             <Trash2 className="w-4 h-4" />
           </Button>

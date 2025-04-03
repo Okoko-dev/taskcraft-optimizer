@@ -12,16 +12,19 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { CheckCircle, CalendarIcon, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle, CalendarIcon, Clock, AlertCircle, Undo } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { toast } from "sonner";
 
 const CalendarViewPage: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { tasks, getTodaysTasks, getTasksByDate } = useTaskManager();
+  const { tasks, getTodaysTasks, getTasksByDate, uncompleteTask } = useTaskManager();
   const [selectedDateTasks, setSelectedDateTasks] = useState<Task[]>([]);
   const [unfinishedTasks, setUnfinishedTasks] = useState<Task[]>([]);
   const [disabledDates, setDisabledDates] = useState<Date[]>([]);
+  const [secondsLeftMap, setSecondsLeftMap] = useState<Record<string, number>>({});
 
   // Get the date range for the last 2 months
   const twoMonthsAgo = subMonths(new Date(), 2);
@@ -42,6 +45,43 @@ const CalendarViewPage: React.FC = () => {
     
     setDisabledDates(allDates);
   }, [twoMonthsAgo, today]);
+
+  useEffect(() => {
+    // Manage countdown timers for recently completed tasks
+    const timers: Record<string, NodeJS.Timeout> = {};
+    const initialSecondsLeft: Record<string, number> = {};
+    
+    selectedDateTasks.forEach(task => {
+      if (task.completed && task.completedAt) {
+        const now = new Date();
+        const completedTime = new Date(task.completedAt);
+        const diffInSeconds = Math.floor((now.getTime() - completedTime.getTime()) / 1000);
+        const timeLeft = Math.max(0, 30 - diffInSeconds);
+        
+        initialSecondsLeft[task.id] = timeLeft;
+        
+        if (timeLeft > 0) {
+          timers[task.id] = setInterval(() => {
+            setSecondsLeftMap(prev => {
+              const newTime = prev[task.id] - 1;
+              if (newTime <= 0) {
+                clearInterval(timers[task.id]);
+                return { ...prev, [task.id]: 0 };
+              }
+              return { ...prev, [task.id]: newTime };
+            });
+          }, 1000);
+        }
+      }
+    });
+    
+    setSecondsLeftMap(initialSecondsLeft);
+    
+    // Cleanup timers
+    return () => {
+      Object.values(timers).forEach(timer => clearInterval(timer));
+    };
+  }, [selectedDateTasks]);
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
@@ -94,6 +134,21 @@ const CalendarViewPage: React.FC = () => {
 
   // Function to get today's tasks
   const todaysTasks = getTodaysTasks();
+  
+  const handleUndo = (taskId: string) => {
+    uncompleteTask(taskId);
+    toast.info("Task marked as incomplete");
+    
+    // Update the selected date tasks
+    setSelectedDateTasks(prev => prev.filter(task => task.id !== taskId));
+  };
+
+  const canUndo = (task: Task) => {
+    if (task.completed && task.completedAt) {
+      return secondsLeftMap[task.id] > 0;
+    }
+    return false;
+  };
 
   return (
     <div className="min-h-screen bg-[#1F2A39] text-white pb-24">
@@ -192,7 +247,21 @@ const CalendarViewPage: React.FC = () => {
               <div className="space-y-3 max-h-40 overflow-y-auto">
                 {selectedDateTasks.map(task => (
                   <div key={task.id} className="bg-[#283445] p-3 rounded-lg border border-[#3D4A5C]">
-                    <h4 className="font-medium">{task.title}</h4>
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-medium">{task.title}</h4>
+                      {canUndo(task) && (
+                        <div className="flex items-center space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-500"
+                            onClick={() => handleUndo(task.id)}
+                          >
+                            <Undo className="h-3 w-3 mr-1" /> Undo ({secondsLeftMap[task.id]}s)
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-300 mt-1">{task.description}</p>
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-xs px-2 py-1 rounded-full bg-[#41E0B5]/20 text-[#41E0B5]">

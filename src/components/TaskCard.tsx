@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Task, useTaskManager } from '@/context/TaskContext';
 import { Check, Calendar, Trash2, Undo, Clock } from 'lucide-react';
@@ -14,6 +13,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const { completeTask, deleteTask, uncompleteTask, restoreTask } = useTaskManager();
   const [showDeleteUndo, setShowDeleteUndo] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(30);
+  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   
   const priorityColors = {
     High: 'bg-red-500',
@@ -40,6 +40,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     return differenceInDays <= 2 && !task.completed;
   };
 
+  useEffect(() => {
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [timer]);
+
   const handleComplete = () => {
     completeTask(task.id);
     toast.success("Task completed! You can undo this action within 30 seconds in the Calendar view.");
@@ -48,25 +56,29 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const handleDelete = () => {
     deleteTask(task.id);
     setShowDeleteUndo(true);
-    toast.success("Task deleted successfully!");
+    toast.success("Task deleted! You can restore it within 30 seconds.");
     
-    // Start countdown for undo
+    if (timer) {
+      clearInterval(timer);
+    }
+    
     let countdown = 30;
     setSecondsLeft(countdown);
     
-    const timer = setInterval(() => {
+    const newTimer = setInterval(() => {
       countdown -= 1;
       setSecondsLeft(countdown);
       
       if (countdown <= 0) {
-        clearInterval(timer);
+        clearInterval(newTimer);
         setShowDeleteUndo(false);
       }
     }, 1000);
     
-    // Clear interval after 30 seconds
+    setTimer(newTimer);
+    
     setTimeout(() => {
-      clearInterval(timer);
+      clearInterval(newTimer);
       setShowDeleteUndo(false);
     }, 30000);
   };
@@ -74,10 +86,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const handleRestore = () => {
     restoreTask(task.id);
     setShowDeleteUndo(false);
+    if (timer) {
+      clearInterval(timer);
+      setTimer(null);
+    }
     toast.success("Task restored successfully!");
   };
   
-  // Check if task was completed within the last 24 hours
   const isRecentlyCompleted = () => {
     if (task.completed && task.completedAt) {
       const now = new Date();
@@ -88,7 +103,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     return false;
   };
 
-  // If task is completed but still within 24-hour window, show it with a different style
   const isVisible = !task.completed || isRecentlyCompleted();
   
   if (!isVisible && !showDeleteUndo) return null;

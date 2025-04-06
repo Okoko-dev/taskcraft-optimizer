@@ -29,10 +29,21 @@ const Tasks = () => {
     'Breaks'
   ];
   
-  // Filter tasks based on search term, active category
-  // Show completed tasks for 24 hours and exclude deleted tasks
+  // Filter tasks based on search term, active category, display completed tasks for 24 hours
   const filteredTasks = tasks
-    .filter(task => !task.deleted) // Exclude deleted tasks
+    .filter(task => {
+      // Show deleted tasks that still have the 30-second undo window
+      if (task.deleted) {
+        if (task.deletedAt) {
+          const now = new Date();
+          const deletedTime = new Date(task.deletedAt);
+          const diffInSeconds = (now.getTime() - deletedTime.getTime()) / 1000;
+          return diffInSeconds <= 30; // Show deleted tasks during the 30-second undo period
+        }
+        return false;
+      }
+      return true;
+    })
     .filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                         task.description.toLowerCase().includes(searchTerm.toLowerCase());

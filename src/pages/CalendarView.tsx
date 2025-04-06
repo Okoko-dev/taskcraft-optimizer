@@ -218,6 +218,21 @@ const CalendarViewPage: React.FC = () => {
                       <span>Due {format(new Date(task.deadline), "MMM d, yyyy")}</span>
                     </div>
                   </div>
+                  {task.completed && task.completedAt && (
+                    <div className="mt-3 text-xs text-gray-400">
+                      Completed {formatDistanceToNow(new Date(task.completedAt), { addSuffix: true })}
+                      {canUndo(task) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="ml-2 h-6 px-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-500"
+                          onClick={() => handleUndo(task.id)}
+                        >
+                          <Undo className="h-3 w-3 mr-1" /> Undo ({secondsLeftMap[task.id]}s)
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

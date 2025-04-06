@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Task, useTaskManager } from '@/context/TaskContext';
-import { Check, Calendar, Undo, Trash2 } from 'lucide-react';
+import { Check, Calendar, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from "sonner";
@@ -11,9 +11,7 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-  const { completeTask, uncompleteTask, deleteTask } = useTaskManager();
-  const [secondsLeft, setSecondsLeft] = useState<number>(0);
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
+  const { completeTask, deleteTask } = useTaskManager();
   
   const priorityColors = {
     High: 'bg-red-500',
@@ -33,42 +31,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     'Breaks': 'bg-cyan-500'
   };
   
-  useEffect(() => {
-    if (task.completed && task.completedAt) {
-      const now = new Date();
-      const completedTime = new Date(task.completedAt);
-      const diffInSeconds = Math.floor((now.getTime() - completedTime.getTime()) / 1000);
-      const timeLeft = Math.max(0, 30 - diffInSeconds);
-      
-      setSecondsLeft(timeLeft);
-      
-      if (timeLeft > 0) {
-        const intervalId = setInterval(() => {
-          setSecondsLeft(prev => {
-            const newTime = prev - 1;
-            if (newTime <= 0) {
-              clearInterval(intervalId);
-              return 0;
-            }
-            return newTime;
-          });
-        }, 1000);
-        
-        setTimer(intervalId);
-        
-        return () => {
-          clearInterval(intervalId);
-        };
-      }
-    } else {
-      if (timer) {
-        clearInterval(timer);
-        setTimer(null);
-      }
-      setSecondsLeft(0);
-    }
-  }, [task.completed, task.completedAt, timer]);
-  
   const isTaskDueSoon = () => {
     const today = new Date();
     const deadline = new Date(task.deadline);
@@ -78,16 +40,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 
   const handleComplete = () => {
     completeTask(task.id);
-    toast.success("Task completed! You can undo this action within 30 seconds.");
-  };
-
-  const handleUndo = () => {
-    uncompleteTask(task.id);
-    toast.info("Task marked as incomplete");
-    if (timer) {
-      clearInterval(timer);
-      setTimer(null);
-    }
+    toast.success("Task completed! You can undo this action within 30 seconds in the Calendar view.");
   };
 
   const handleDelete = () => {

@@ -29,9 +29,10 @@ const Tasks = () => {
     'Breaks'
   ];
   
-  // Filter tasks based on search term, active category, and exclude completed tasks
+  // Filter tasks based on search term, active category
+  // Show completed tasks for 24 hours and exclude deleted tasks
   const filteredTasks = tasks
-    .filter(task => !task.completed) // Exclude completed tasks
+    .filter(task => !task.deleted) // Exclude deleted tasks
     .filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                         task.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -39,9 +40,22 @@ const Tasks = () => {
       return matchesSearch && matchesCategory;
     })
     .sort((a, b) => {
-      // Sort by priority
-      const priorityOrder = { High: 3, Medium: 2, Low: 1 };
-      return priorityOrder[b.priority] - priorityOrder[a.priority];
+      // Sort completed tasks to the bottom
+      if (a.completed && !b.completed) return 1;
+      if (!a.completed && b.completed) return -1;
+      
+      // Sort by priority for non-completed tasks
+      if (!a.completed && !b.completed) {
+        const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+        return priorityOrder[b.priority] - priorityOrder[a.priority];
+      }
+      
+      // Sort completed tasks by completedAt (most recent first)
+      if (a.completed && b.completed && a.completedAt && b.completedAt) {
+        return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+      }
+      
+      return 0;
     });
 
   return (

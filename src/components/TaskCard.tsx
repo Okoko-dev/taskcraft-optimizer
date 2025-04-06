@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Task, useTaskManager } from '@/context/TaskContext';
-import { Check, Calendar, Trash2 } from 'lucide-react';
+import { Check, Calendar, Trash2, Undo, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from "sonner";
@@ -11,7 +11,9 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-  const { completeTask, deleteTask } = useTaskManager();
+  const { completeTask, deleteTask, uncompleteTask, restoreTask } = useTaskManager();
+  const [showDeleteUndo, setShowDeleteUndo] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(30);
   
   const priorityColors = {
     High: 'bg-red-500',
@@ -45,11 +47,75 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 
   const handleDelete = () => {
     deleteTask(task.id);
+    setShowDeleteUndo(true);
     toast.success("Task deleted successfully!");
+    
+    // Start countdown for undo
+    let countdown = 30;
+    setSecondsLeft(countdown);
+    
+    const timer = setInterval(() => {
+      countdown -= 1;
+      setSecondsLeft(countdown);
+      
+      if (countdown <= 0) {
+        clearInterval(timer);
+        setShowDeleteUndo(false);
+      }
+    }, 1000);
+    
+    // Clear interval after 30 seconds
+    setTimeout(() => {
+      clearInterval(timer);
+      setShowDeleteUndo(false);
+    }, 30000);
+  };
+  
+  const handleRestore = () => {
+    restoreTask(task.id);
+    setShowDeleteUndo(false);
+    toast.success("Task restored successfully!");
+  };
+  
+  // Check if task was completed within the last 24 hours
+  const isRecentlyCompleted = () => {
+    if (task.completed && task.completedAt) {
+      const now = new Date();
+      const completedTime = new Date(task.completedAt);
+      const diffInHours = (now.getTime() - completedTime.getTime()) / (1000 * 3600);
+      return diffInHours <= 24;
+    }
+    return false;
   };
 
+  // If task is completed but still within 24-hour window, show it with a different style
+  const isVisible = !task.completed || isRecentlyCompleted();
+  
+  if (!isVisible && !showDeleteUndo) return null;
+  
+  if (showDeleteUndo) {
+    return (
+      <div className="task-card relative overflow-hidden bg-[#283445]/50 p-4 rounded-lg border border-[#3D4A5C] animate-pulse">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            <Clock className="w-4 h-4 mr-2 text-amber-500" />
+            <p className="text-gray-400">Task deleted. You can restore it for {secondsLeft} seconds.</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 h-8"
+            onClick={handleRestore}
+          >
+            <Undo className="w-3 h-3 mr-1" /> Restore
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`task-card relative overflow-hidden bg-[#283445] p-4 rounded-lg border border-[#3D4A5C]`}>
+    <div className={`task-card relative overflow-hidden ${task.completed ? 'bg-[#283445]/70' : 'bg-[#283445]'} p-4 rounded-lg border ${task.completed ? 'border-[#3D4A5C]/50' : 'border-[#3D4A5C]'}`}>
       {isTaskDueSoon() && (
         <div className="absolute top-0 right-0 bg-red-500 text-xs px-2 py-1 text-white rounded-bl-md">
           Due Soon!
@@ -57,7 +123,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
       )}
       
       <div className="flex justify-between items-start mb-2">
-        <h3 className={`font-semibold`}>
+        <h3 className={`font-semibold ${task.completed ? 'text-gray-400 line-through' : ''}`}>
           {task.title}
         </h3>
         
@@ -67,7 +133,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
         </div>
       </div>
       
-      <p className="text-sm text-gray-300 mb-3 line-clamp-2">{task.description}</p>
+      <p className={`text-sm ${task.completed ? 'text-gray-500' : 'text-gray-300'} mb-3 line-clamp-2`}>{task.description}</p>
       
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
@@ -82,23 +148,32 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
         </div>
         
         <div className="flex space-x-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="bg-primary/20 hover:bg-primary/30 text-primary-foreground rounded-full w-8 h-8 p-0"
-            onClick={handleComplete}
-          >
-            <Check className="w-4 h-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className="bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full w-8 h-8 p-0"
-            onClick={handleDelete}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          {!task.completed ? (
+            <>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="bg-primary/20 hover:bg-primary/30 text-primary-foreground rounded-full w-8 h-8 p-0"
+                onClick={handleComplete}
+              >
+                <Check className="w-4 h-4" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full w-8 h-8 p-0"
+                onClick={handleDelete}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </>
+          ) : (
+            <div className="text-xs text-gray-400 flex items-center">
+              <Check className="w-3 h-3 mr-1 text-green-500" />
+              Completed {task.completedAt && formatDistanceToNow(new Date(task.completedAt), { addSuffix: true })}
+            </div>
+          )}
         </div>
       </div>
     </div>

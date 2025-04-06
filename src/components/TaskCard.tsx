@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Task, useTaskManager } from '@/context/TaskContext';
 import { Check, Calendar, Trash2, Undo, Clock } from 'lucide-react';
@@ -121,7 +122,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 h-8"
             onClick={handleRestore}
           >
-            <Undo className="w-3 h-3 mr-1" /> Restore
+            <Undo className="w-4 h-4 mr-1" /> Restore
           </Button>
         </div>
       </div>
@@ -183,9 +184,20 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
               </Button>
             </>
           ) : (
-            <div className="text-xs text-gray-400 flex items-center">
-              <Check className="w-3 h-3 mr-1 text-green-500" />
-              Completed {task.completedAt && formatDistanceToNow(new Date(task.completedAt), { addSuffix: true })}
+            <div className="flex items-center">
+              <div className="text-xs text-gray-400 flex items-center mr-2">
+                <Check className="w-3 h-3 mr-1 text-green-500" />
+                Completed {task.completedAt && formatDistanceToNow(new Date(task.completedAt), { addSuffix: true })}
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 rounded-full w-6 h-6 p-0 ml-2"
+                onClick={() => uncompleteTask(task.id)}
+                title="Undo completion"
+              >
+                <Undo className="w-3 h-3" />
+              </Button>
             </div>
           )}
         </div>
